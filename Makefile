@@ -1,4 +1,4 @@
-# Nome do executável final
+# Executável
 EXEC = tetris
 
 # Pastas
@@ -15,16 +15,20 @@ CC = gcc
 CFLAGS = -I$(INCLUDE_DIR) -Wall -Wextra
 
 # Regra padrão
-all: $(EXEC)
+all: $(BUILD_DIR) $(EXEC)
 
-# Como criar o executável
+# Cria o executável
 $(EXEC): $(OBJ)
 	$(CC) $(OBJ) -o $(BUILD_DIR)/$(EXEC)
 
-# Como compilar os .o
+# Vai compilar os arquivos .o
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Limpeza
+# Vai o diretório build CASO ele nao exista
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# Pra limpar
 clean:
 	rm -f $(BUILD_DIR)/*.o $(BUILD_DIR)/$(EXEC)
