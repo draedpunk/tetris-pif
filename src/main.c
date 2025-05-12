@@ -4,38 +4,54 @@
 #include "timer.h"
 #include <unistd.h>
 
+typedef enum{
+    ESQUERDA,
+    DIREITA,
+    BAIXO,
+    CAIR,
+    ROTACIONAR
+} Movimentos;
 
-int main() {
-    int x = (MAXX - MINX) / 2;
-    int y = 1;
+void area_jogo(){
+    int areaX = 10;
+    int areaY = 5;
+    int largura_tela = 12;
+    int altura_tela = 18;
 
-    screenInit(1);         
-    keyboardInit();        
-    timerInit(300);       
+    for (int y= 0; y< altura_tela;y++){
+        for (int x = 0;x < largura_tela; x++){
+            screenGotoxy(areaX + x, areaY+y);
 
-    while (1) {
-        if (keyhit()) {
-            char key = readch();
-            if (key == 'q') break;
-            if (key == 'a' && x > MINX + 1) x--;  //esquerda
-            if (key == 'd' && x < MAXX - 1) x++;  //direita
-            if (key == 's' && y < MAXY - 1) y++;  //pra baixo
+            if (x ==0 || x == largura_tela -0){
+                printf("#");
+            } else {
+                printf(" ");
+            }
         }
-
-        if (timerTimeOver()) {
-            y++;
-            if (y >= MAXY - 1) y = 1;
-        }
-
-        screenClear();
-        screenDrawBorders();
-        screenGotoxy(x, y);
-        printf("⬛");
-        usleep(20000);
-        fflush(stdout);
     }
 
-    screenDestroy();
+    for (int x =0; x <largura_tela; x++){
+        screenGotoxy(areaX + x, areaY + altura_tela);
+        printf("#");
+    }
+}
+
+int main(){
+    /*------------------------- inicio do jogo -------------------------*/ 
+    screenInit(0);
+    area_jogo();
+    sleep(5);
+    timerInit(50);
+
+
+
+
+
+
+    /*------------------------- fim do jogo -------------------------*/ 
     keyboardDestroy();
+    screenDestroy();
+    timerDestroy();
+
     return 0;
 }
