@@ -5,8 +5,8 @@
 #include "keyboard.h"
 #include "timer.h"
 
-int posicao_x = 8 + (24 - 2 - 4) / 2; 
-int posicao_y = 0;
+int posicao_x = 8 + (24 - 2 - 4)/2;
+int posicao_y = 4;
 int rotacao = 0;
 int id_peca = 0;
 
@@ -99,6 +99,26 @@ void desenhar_peca(){
     }
 }
 
+int checar_colisao_parede(char *peca, int px, int py, int r){
+    int colidiu = 0;
+    for (int x =0; x < 4; x++){
+        for (int y = 0; y < 4; y++){
+            int i = rotacionar_peca(x, y, r);
+            if(peca[i] == 'X'){
+                int novo_x = px + x;
+                int novo_y = py + y;
+
+                if ((novo_x <= 8 || novo_x >= 31 || novo_y >= 22)){
+                    colidiu =1;
+                    return colidiu;
+                }
+            }
+
+        }
+    }
+    return 0;
+}
+
 void area_jogo(){
     int largura = 24;
     int altura = 18;
@@ -168,16 +188,24 @@ int main(){
             int tecla = readch();
 
             switch (tecla){
-                case 'a': posicao_x--; break;
-                case 'd': posicao_x++; break;
-                case 's': posicao_y++; break;
-                case 'w': rotacao++; break;
-                case 27:  //tecla esc
-                    screenDestroy();
-                    keyboardDestroy();
-                    timerDestroy();
-                    exit(0);
+                case 'a': 
+                    if (!checar_colisao_parede(tetraminos[id_peca], posicao_x - 1, posicao_y, rotacao))
+                        posicao_x--; 
+                    break;
+                case 'd': 
+                    if (!checar_colisao_parede(tetraminos[id_peca], posicao_x + 1, posicao_y, rotacao))
+                        posicao_x++; 
+                    break;
+                case 's': 
+                    if (!checar_colisao_parede(tetraminos[id_peca], posicao_x, posicao_y + 1, rotacao))
+                        posicao_y++; 
+                    break;
+                case 'w':
+                    if (!checar_colisao_parede(tetraminos[id_peca], posicao_x, posicao_y, rotacao + 1))
+                        rotacao++; 
+                    break;
             }
+
         }
 
         // gravidade
