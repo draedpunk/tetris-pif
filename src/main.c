@@ -1,18 +1,25 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
 #include "screen.h"
 #include "keyboard.h"
 #include "timer.h"
 
-int posicao_x = 8 + (24 - 2 - 4)/2;
-int posicao_y = 4;
-int rotacao = 0;
-int id_peca = 0;
+#define LARGURA_JOGO 24
+#define ALTURA_JOGO 18
+#define INICIO_X 8
+#define INICIO_Y 4
+
+int posicao_x, posicao_y;
+int rotacao, id_peca, proxima_peca;
+int pontuacao = 0;
+int velocidade = 300000;
 
 char *tetraminos[7];
+char area_jogo[ALTURA_JOGO][LARGURA_JOGO];
 
-void gerar_tetraminos(){
+void gerar_tetraminos() {
     tetraminos[0] = "...."
                     "XXXX"
                     "...."
@@ -49,181 +56,208 @@ void gerar_tetraminos(){
                     "...."; // Z
 }
 
-int rotacionar_peca(int pX, int pY, int r){
-    switch(r % 4){
-        case 0: return (pY * 4 + pX);             // 0°
-        case 1: return (12 + pY - (pX * 4));       // 90°
-        case 2: return (15 - (pY * 4) - pX);       // 180°
-        case 3: return (3 - pY + (pX * 4));        // 270°
+int rotacionar_peca(int pX, int pY, int r) {
+    switch (r % 4) {
+        case 0: return pY * 4 + pX;             // 0°
+        case 1: return 12 + pY - (pX * 4);      // 90°
+        case 2: return 15 - (pY * 4) - pX;      // 180°
+        case 3: return 3 - pY + (pX * 4);       // 270°
     }
     return 0;
 }
 
-void limpar_peca(){
-    for (int x = 0; x < 4; x++){
-        for (int y = 0; y < 4; y++){
-            char bloco = tetraminos[id_peca][rotacionar_peca(x, y, rotacao)];
-            if (bloco == 'X'){
-                // screenGotoxy(posicao_x + x, posicao_y + y);
-                // printf(" ");
-                int desenhar_x = posicao_x + x;
-                int desenhar_y = posicao_y + y;
-
-                if (desenhar_x > 8 && desenhar_x < 31 && desenhar_y >= 4 && desenhar_y < 22) {
-                    screenGotoxy(desenhar_x, desenhar_y);
-                    printf(" ");
-                }
-
-            }
-        }
-    }
-}
-
-void desenhar_peca(){
-    for (int x = 0; x < 4; x++){
-        for (int y = 0; y < 4; y++){
-            char bloco = tetraminos[id_peca][rotacionar_peca(x, y, rotacao)];
-            if (bloco == 'X'){
-                // screenGotoxy(posicao_x + x, posicao_y + y);
-                // printf("Z");
-                int desenhar_x = posicao_x + x;
-                int desenhar_y = posicao_y + y;
-
-                if (desenhar_x > 8 && desenhar_x < 31 && desenhar_y >= 4 && desenhar_y < 22) {
-                    screenGotoxy(desenhar_x, desenhar_y);
-                    printf("P");
-                }
-
-            }
-        }
-    }
-}
-
-int checar_colisao_parede(char *peca, int px, int py, int r){
-    int colidiu = 0;
-    for (int x =0; x < 4; x++){
-        for (int y = 0; y < 4; y++){
+int checar_colisao(char *peca, int px, int py, int r) {
+    for (int x = 0; x < 4; x++) {
+        for (int y = 0; y < 4; y++) {
             int i = rotacionar_peca(x, y, r);
-            if(peca[i] == 'X'){
+            if (peca[i] == 'X') {
                 int novo_x = px + x;
                 int novo_y = py + y;
 
-                if ((novo_x <= 8 || novo_x >= 31 || novo_y >= 22)){
-                    colidiu =1;
-                    return colidiu;
-                }
+                if (novo_x < 0 || novo_x >= LARGURA_JOGO || novo_y >= ALTURA_JOGO)
+                    return 1;
+                if (novo_y >= 0 && area_jogo[novo_y][novo_x] != ' ')
+                    return 1;
             }
-
         }
     }
     return 0;
 }
 
-void area_jogo(){
-    int largura = 24;
-    int altura = 18;
-    int inicioX = 8, inicioY = 4;
+void desenhar_peca(char *peca, int px, int py, int r, char simbolo) {
+    for (int x = 0; x < 4; x++) {
+        for (int y = 0; y < 4; y++) {
+            int i = rotacionar_peca(x, y, r);
+            if (peca[i] == 'X') {
+                int desenhar_x = px + x;
+                int desenhar_y = py + y;
 
-    for (int y = 0; y < altura; y++){
-        for (int x = 0; x < largura; x++){
-            screenGotoxy(inicioX + x, inicioY + y);
-
-            if (x == 0 || x == largura - 1){
-                printf("|");
-            } else {
-                printf(" ");
+                if (desenhar_x >= 0 && desenhar_x < LARGURA_JOGO &&
+                    desenhar_y >= 0 && desenhar_y < ALTURA_JOGO) {
+                    screenGotoxy(INICIO_X + desenhar_x, INICIO_Y + desenhar_y);
+                    printf("%c", simbolo);
+                }
             }
         }
     }
+}
 
-    //base
-    for (int x = 0; x < largura; x++){
-        screenGotoxy(inicioX + x, inicioY + altura);
+void fixar_peca(char *peca, int px, int py, int r) {
+    for (int x = 0; x < 4; x++) {
+        for (int y = 0; y < 4; y++) {
+            int i = rotacionar_peca(x, y, r);
+            if (peca[i] == 'X') {
+                int fx = px + x;
+                int fy = py + y;
+                if (fx >= 0 && fx < LARGURA_JOGO && fy >= 0 && fy < ALTURA_JOGO)
+                    area_jogo[fy][fx] = 'X';
+            }
+        }
+    }
+}
+
+
+void limpar_linhas() {
+    for (int y = 0; y < ALTURA_JOGO; y++) {
+        int linha_completa = 1;
+        for (int x = 0; x < LARGURA_JOGO; x++) {
+            if (area_jogo[y][x] == ' ') {
+                linha_completa = 0;
+                break;
+            }
+        }
+        if (linha_completa) {
+            for (int ny = y; ny > 0; ny--) {
+                for (int x = 0; x < LARGURA_JOGO; x++) {
+                    area_jogo[ny][x] = area_jogo[ny - 1][x];
+                }
+            }
+            for (int x = 0; x < LARGURA_JOGO; x++) {
+                area_jogo[0][x] = ' ';
+            }
+            pontuacao += 100;
+            if (velocidade > 100000)
+                velocidade -= 10000;
+            timerUpdateTimer(velocidade);
+        }
+    }
+}
+
+void desenhar_area_jogo() {
+    for (int y = 0; y < ALTURA_JOGO; y++) {
+        for (int x = 0; x < LARGURA_JOGO; x++) {
+            screenGotoxy(INICIO_X + x, INICIO_Y + y);
+            printf("%c", area_jogo[y][x]);
+        }
+    }
+}
+
+void desenhar_bordas() {
+    for (int y = 0; y <= ALTURA_JOGO; y++) {
+        screenGotoxy(INICIO_X - 1, INICIO_Y + y);
+        printf("|");
+        screenGotoxy(INICIO_X + LARGURA_JOGO, INICIO_Y + y);
+        printf("|");
+    }
+    for (int x = -1; x <= LARGURA_JOGO; x++) {
+        screenGotoxy(INICIO_X + x, INICIO_Y + ALTURA_JOGO);
         printf("#");
     }
 }
 
-void banner_titulo(){
-    int bannerX = (80 - 53) / 2;
-    int bannerY = (24 - 6) / 2;
-
-    screenGotoxy(bannerX, bannerY);
-    printf(" _____ ______  _____  _____ ______  _____  _____ ");
-    screenGotoxy(bannerX, bannerY + 1);
-    printf("|_   _|| ___ \\|  ___||_   _|| ___ \\|_   _|/  ___|");
-    screenGotoxy(bannerX, bannerY + 2);
-    printf("  | |  | |_/ /| |__    | |  | |_/ /  | |  \\ `--. ");
-    screenGotoxy(bannerX, bannerY + 3);
-    printf("  | |  |    / |  __|   | |  |    /   | |   `--. \\");
-    screenGotoxy(bannerX, bannerY + 4);
-    printf("  | |  | |\\ \\ | |___   | |  | |\\ \\  _| |_ /\\__/ /");
-    screenGotoxy(bannerX, bannerY + 5);
-    printf("  \\_/  \\_| \\_|\\____/   \\_/  \\_| \\_| \\___/ \\____/ ");
+void exibir_pontuacao() {
+    screenGotoxy(INICIO_X + LARGURA_JOGO + 2, INICIO_Y);
+    printf("Pontuacao: %d", pontuacao);
 }
 
-void exibir_banner(){
-    screenInit(1);
-    banner_titulo();
-    screenUpdate();
-    sleep(2);
-    system("clear");
+void exibir_proxima_peca() {
+    screenGotoxy(INICIO_X + LARGURA_JOGO + 2, INICIO_Y + 2);
+    printf("Proxima:");
+    for (int y = 0; y < 4; y++) {
+        screenGotoxy(INICIO_X + LARGURA_JOGO + 2, INICIO_Y + 3 + y);
+        for (int x = 0; x < 4; x++) {
+            char bloco = tetraminos[proxima_peca][rotacionar_peca(x, y, 0)];
+            printf("%c", bloco == 'X' ? 'X' : ' ');
+        }
+    }
 }
 
-int main(){
-    exibir_banner();
+void inicializar_area_jogo() {
+    for (int y = 0; y < ALTURA_JOGO; y++) {
+        for (int x = 0; x < LARGURA_JOGO; x++) {
+            area_jogo[y][x] = ' ';
+        }
+    }
+}
 
-    gerar_tetraminos();
+void nova_peca() {
+    id_peca = proxima_peca;
+    proxima_peca = rand() % 7;
+    posicao_x = LARGURA_JOGO / 2 - 2;
+    posicao_y = 0;
+    rotacao = 0;
+}
+
+int main() {
+    srand(time(NULL));
     screenInit(1);
     keyboardInit();
-    timerInit(300000);
+    timerInit(velocidade);
 
-    area_jogo();
+    gerar_tetraminos();
+    inicializar_area_jogo();
+    desenhar_bordas();
 
-    screenUpdate();
+    proxima_peca = rand() % 7;
+    nova_peca();
 
-    while(1){
-        limpar_peca();
-
-        if (keyhit()){
+    while (1) {
+        if (keyhit()) {
             int tecla = readch();
-
-            switch (tecla){
-                case 'a': 
-                    if (!checar_colisao_parede(tetraminos[id_peca], posicao_x - 1, posicao_y, rotacao))
-                        posicao_x--; 
-                    break;
-                case 'd': 
-                    if (!checar_colisao_parede(tetraminos[id_peca], posicao_x + 1, posicao_y, rotacao))
-                        posicao_x++; 
-                    break;
-                case 's': 
-                    if (!checar_colisao_parede(tetraminos[id_peca], posicao_x, posicao_y + 1, rotacao))
-                        posicao_y++; 
-                    break;
-                case 'w':
-                    if (!checar_colisao_parede(tetraminos[id_peca], posicao_x, posicao_y, rotacao + 1))
-                        rotacao++; 
-                    break;
+            if (tecla == 'a') {
+                if (!checar_colisao(tetraminos[id_peca], posicao_x - 1, posicao_y, rotacao))
+                    posicao_x--;
+            } else if (tecla == 'd') {
+                if (!checar_colisao(tetraminos[id_peca], posicao_x + 1, posicao_y, rotacao))
+                    posicao_x++;
+            } else if (tecla == 's') {
+                if (!checar_colisao(tetraminos[id_peca], posicao_x, posicao_y + 1, rotacao))
+                    posicao_y++;
+            } else if (tecla == 'w') {
+                if (!checar_colisao(tetraminos[id_peca], posicao_x, posicao_y, rotacao + 1))
+                    rotacao++;
             }
-
         }
 
-        // gravidade
-        if (timerTimeOver()){
-            posicao_y++;
-            timerInit(300000);
+        if (timerTimeOver()) {
+            if (!checar_colisao(tetraminos[id_peca], posicao_x, posicao_y + 1, rotacao)) {
+                posicao_y++;
+            } else {
+                fixar_peca(tetraminos[id_peca], posicao_x, posicao_y, rotacao);
+                limpar_linhas();
+                nova_peca();
+                if (checar_colisao(tetraminos[id_peca], posicao_x, posicao_y, rotacao)) {
+                    screenGotoxy(INICIO_X, INICIO_Y + ALTURA_JOGO + 2);
+                    printf("Game Over! Pontuacao final: %d\n", pontuacao);
+                    break;
+                }
+            }
+            timerUpdateTimer(velocidade);
         }
 
-    
-        desenhar_peca();
+        desenhar_area_jogo();
+        desenhar_peca(tetraminos[id_peca], posicao_x, posicao_y, rotacao, 'X');
+        exibir_pontuacao();
+        exibir_proxima_peca();
 
         screenUpdate();
-        usleep(50 * 1000);
+        usleep(5000);
     }
 
     screenDestroy();
     keyboardDestroy();
     timerDestroy();
-
     return 0;
 }
+
+ 
