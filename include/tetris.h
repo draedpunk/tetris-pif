@@ -10,10 +10,9 @@ typedef struct {
     int colunas;
 } MAPA;
 
-
 void carregar_tetraminos();
 int rotacionar(int x, int y, int rot);
-int pode_encaixar(int tetramino, int rot, int posX, int posY);
+int pode_encaixar(MAPA* mapa, int tetramino, int rot, int posX, int posY);
 void desenhar_area_jogo();
 void ler_input(int tecla[4]);
 void explodir(int cx, int cy);

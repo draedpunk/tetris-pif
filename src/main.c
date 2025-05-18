@@ -10,23 +10,11 @@
 
 #define LARGURA_JOGO 9
 #define ALTURA_JOGO 18
-// int LARGURA_JOGO = 9;
-// int ALTURA_JOGO=18;
 #define INICIO_X 6
 #define INICIO_Y 4
 
 char *tetraminos[9];
 unsigned char *grade_jogo = NULL;
-
-#define TAMANHO_MAX_LINHAS 24
-#define TAMANHO_MAX_COLUNAS 40
-
-typedef struct {
-    char matriz[TAMANHO_MAX_LINHAS][TAMANHO_MAX_COLUNAS];
-    int linhas;
-    int colunas;
-} MAPA;
-
 
 void ler_mapa(MAPA *m) {
     FILE *f = fopen("mapa.txt", "r");
