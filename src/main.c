@@ -6,7 +6,7 @@
 #include "keyboard.h"
 #include "timer.h"
 
-#define LARGURA_JOGO 10
+#define LARGURA_JOGO 9
 #define ALTURA_JOGO 18
 #define INICIO_X 8
 #define INICIO_Y 4
@@ -89,13 +89,14 @@ void desenhar_area_jogo() {
         for (int x = 0; x < LARGURA_JOGO; x++) {
             unsigned char bloco = grade_jogo[y * LARGURA_JOGO + x];
             if (bloco == 0) {
-                printf("");
+                printf(" ");
             } else if (bloco == 8) {
                 printf("="); // linha preenchida
             } else if (bloco == 9) {
                 printf("#"); // parede/borda fixa
             } else {
-                printf("%c", 'A' + bloco - 1);// tipo da peça
+                //printf("%c", 'A' + bloco - 1);// tipo da peça
+                printf("#");
             }
         }
 
@@ -153,7 +154,7 @@ int main(){
     int x_atual = LARGURA_JOGO / 2 - 2;
     int y_atual = 0;
 
-    int velocidade = 500;
+    int velocidade = 500; // 5 segundos
     int cair = 0;
     int tetraminos_jogados = 0;
     int pontuacao = 0;
@@ -163,15 +164,18 @@ int main(){
     int bRotateHold = 1;
     int teclas[4] = {0, 0, 0, 0};
 
+    timerInit(velocidade);
     while (!fim_jogo) {
-        //timerInit(velocidade);
         cair = timerTimeOver();
 
         ler_input(teclas);
 
         if (teclas[0] && pode_encaixar(tetramino_atual, rotacao_atual, x_atual + 1, y_atual)) x_atual++;
         if (teclas[1] && pode_encaixar(tetramino_atual, rotacao_atual, x_atual - 1, y_atual)) x_atual--;
-        if (teclas[2] && pode_encaixar(tetramino_atual, rotacao_atual, x_atual, y_atual + 1)) y_atual++;
+        if (teclas[2] && pode_encaixar(tetramino_atual, rotacao_atual, x_atual, y_atual + 1)) {
+            y_atual++;
+            timerUpdateTimer(velocidade);
+        }
         if (teclas[3]) {
             if (bRotateHold && pode_encaixar(tetramino_atual, rotacao_atual + 1, x_atual, y_atual))
                 rotacao_atual++;
@@ -180,16 +184,13 @@ int main(){
             bRotateHold = 1;
         }
 
-        /* a partir daqui */
-
         int pode_descer = pode_encaixar(tetramino_atual, rotacao_atual, x_atual, y_atual + 1);
 
-        // Se for tempo de cair ou se o jogador tentou mover, atualiza a posição
         if (cair && pode_descer) {
             y_atual++;
-            cair = 0;
+            timerUpdateTimer(velocidade);
+            //cair = 0;
         } else if (!pode_descer) {
-            // A peça não pode mais descer → fixa imediatamente
             tetraminos_jogados++;
 
             if (tetraminos_jogados % 50 == 0 && velocidade >= 100) {
@@ -197,7 +198,6 @@ int main(){
                 timerUpdateTimer(velocidade);
             }
 
-            // FIXAR A PEÇA NA GRADE
             for (int px = 0; px < 4; px++) {
                 for (int py = 0; py < 4; py++) {
                     if (tetraminos[tetramino_atual][rotacionar(px, py, rotacao_atual)] != '.') {
@@ -206,10 +206,6 @@ int main(){
                 }
             }
 
-
-
-
-                // verificar linhas completas
             total_linhas = 0;
             for (int py = 0; py < 4; py++) {
                 int linha = y_atual + py;
@@ -223,7 +219,7 @@ int main(){
                     }
                     if (cheia) {
                         for (int px = 1; px < LARGURA_JOGO - 1; px++) {
-                            grade_jogo[linha * LARGURA_JOGO + px] = 8; // marcar linha cheia
+                            grade_jogo[linha * LARGURA_JOGO + px] = 8;
                         }
                         if (total_linhas < 4) {
                             vetor_linhas[total_linhas++] = linha;
@@ -246,7 +242,6 @@ int main(){
                     total_linhas = 0;
             }
 
-                // nova peça
             tetramino_atual = rand() % 7;
             rotacao_atual = 0;
             x_atual = LARGURA_JOGO / 2 - 2;
@@ -260,7 +255,6 @@ int main(){
             }
 
            desenhar_area_jogo();
-        // Desenhar a peça atual no topo do jogo
     for (int px = 0; px < 4; px++) {
         for (int py = 0; py < 4; py++) {
             int pi = rotacionar(px, py, rotacao_atual);
@@ -278,7 +272,6 @@ int main(){
     usleep(50000);
     }
 
- 
 
     screenDestroy();
     free(grade_jogo);
