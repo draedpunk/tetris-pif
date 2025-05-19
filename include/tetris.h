@@ -4,16 +4,10 @@
 #define TAMANHO_MAX_LINHAS 24
 #define TAMANHO_MAX_COLUNAS 40
 
-// typedef struct {
-//     char matriz[TAMANHO_MAX_LINHAS][TAMANHO_MAX_COLUNAS];
-//     int linhas;
-//     int colunas;
-// } MAPA;
-
 typedef struct {
     int linhas;
     int colunas;
-    char** matriz; // ✅ matriz agora é um ponteiro duplo
+    char** matriz; 
 } MAPA;
 
 

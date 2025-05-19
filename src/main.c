@@ -7,6 +7,7 @@
 #include "keyboard.h"
 #include "timer.h"
 #include "tetris.h"
+#include "ui.h"
 
 #define LARGURA_JOGO 9
 #define ALTURA_JOGO 18
@@ -310,8 +311,9 @@ int main() {
     ler_mapa(&t); 
     srand(time(NULL));
     carregar_tetraminos();
-
+    exibir_banner_titulo();
     screenInit(1);
+    
     timerInit(500);
 
     int pontuacao = 0, fim_jogo = 0, velocidade = 500;
@@ -344,7 +346,8 @@ int main() {
             if (verificar_game_over(&t, tipo, rot, x, y)) {
                 fim_jogo = 1;
                 screenGotoxy(INICIO_X, INICIO_Y + t.linhas / 2);
-                printf("GAME OVER!");
+                //printf("GAME OVER!");
+                exibir_banner_gameover();
             }
         }
 
