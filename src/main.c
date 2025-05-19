@@ -19,7 +19,7 @@ void alocar_mapa(MAPA* t) {
     t->matriz = malloc(t->linhas * sizeof(char*));
 
     for (int i = 0; i < t->linhas; i++) {
-        t->matriz[i] = malloc((t->colunas + 1) * sizeof(char)); // +1 pro '\0'
+        t->matriz[i] = malloc((t->colunas + 1) * sizeof(char));
         for (int j = 0; j < t->colunas + 1; j++) {
             t->matriz[i][j] = 0;
         }
@@ -38,11 +38,10 @@ void ler_mapa(MAPA *t) {
     int linhas = 0;
     int colunas = -1;
 
-    // Primeiro passo: ler e contar linhas/colunas
     char temp[TAMANHO_MAX_LINHAS][TAMANHO_MAX_COLUNAS];
 
     while (fgets(linha, sizeof(linha), f) != NULL) {
-        linha[strcspn(linha, "\r\n")] = 0; // remove quebra de linha
+        linha[strcspn(linha, "\r\n")] = 0; 
         int len = strlen(linha);
 
         if (colunas == -1) colunas = len;
@@ -64,12 +63,10 @@ void ler_mapa(MAPA *t) {
 
     fclose(f);
 
-    // Agora já sabemos as dimensões
     t->linhas = linhas;
     t->colunas = colunas;
-    alocar_mapa(t);  // aloca corretamente com base nas dimensões
+    alocar_mapa(t); 
 
-    // Copia os dados lidos para a matriz alocada
     for (int i = 0; i < linhas; i++) {
         strcpy(t->matriz[i], temp[i]);
     }
@@ -132,7 +129,7 @@ void carregar_tetraminos() {
     
     tetraminos[8] = "000."
                     ".0.."
-                    ".0.."
+                    "...."
                     "...."; // peça explosiva
 }
 
@@ -197,12 +194,11 @@ void explodir(MAPA* t, int cx, int cy) {
 
 
 void desenhar_mapa_com_peca(MAPA* t, int tetramino_atual, int rotacao_atual, int x_atual, int y_atual) {
-    // Desenha o mapa linha a linha
     for (int y = 0; y < t->linhas; y++) {
         for (int x = 0; x < t->colunas; x++) {
             screenGotoxy(INICIO_X + x, INICIO_Y + y);
 
-            int caractere_peca = 0; // 0 significa não tem peça aqui
+            int caractere_peca = 0;
 
             int rel_x = x - x_atual;
             int rel_y = y - y_atual;
@@ -214,7 +210,6 @@ void desenhar_mapa_com_peca(MAPA* t, int tetramino_atual, int rotacao_atual, int
             }
 
             if (caractere_peca) {
-                // Desenha o caractere da peça (exemplo: 'A' + tetramino_atual)
                 printf("%c", 'A' + tetramino_atual);
             } else {
                 printf("%c", t->matriz[y][x]);
@@ -227,7 +222,7 @@ void desenhar_mapa_com_peca(MAPA* t, int tetramino_atual, int rotacao_atual, int
 int remover_linhas_completas(MAPA *t) {
     int linhas_removidas = 0;
 
-    for (int y = t->linhas - 2; y >= 0; y--) { // -1 ignora base
+    for (int y = t->linhas - 2; y >= 0; y--) {
         int cheia = 1;
         for (int x = 1; x < t->colunas - 1; x++) {
             if (t->matriz[y][x] == ' ') {
@@ -237,20 +232,17 @@ int remover_linhas_completas(MAPA *t) {
         }
 
         if (cheia) {
-            // Desce todas as linhas acima
             for (int yy = y; yy > 0; yy--) {
                 for (int x = 1; x < t->colunas - 1; x++) {
                     t->matriz[yy][x] = t->matriz[yy - 1][x];
                 }
             }
-
-            // Limpa a linha do topo
             for (int x = 1; x < t->colunas - 1; x++) {
                 t->matriz[0][x] = ' ';
             }
 
             linhas_removidas++;
-            y++; // Reavaliar linha atual após o shift
+            y++;
         }
     }
 
@@ -281,7 +273,12 @@ void posicionar_tetramino_no_mapa(MAPA *t, int tipo, int rot, int x, int y) {
     }
 }
 
-void atualizar_pontuacao(int *pontuacao, int linhas) {
+void atualizar_pontuacao(int *pontuacao, int linhas, int eh_explosiva) {
+    if (eh_explosiva) {
+        *pontuacao -= 50; //vai perder 50 pontos com a peça explsoiva
+        return;
+    }
+    
     *pontuacao += 25;
     if (linhas > 0) {
         *pontuacao += (1 << linhas) * 100;
@@ -311,7 +308,6 @@ int verificar_game_over(MAPA *t, int tipo, int rot, int x, int y) {
 int main() {
     MAPA t;
     ler_mapa(&t); 
-    //inicializar_mapa(&t);
     srand(time(NULL));
     carregar_tetraminos();
 
@@ -338,7 +334,7 @@ int main() {
             if (tipo == 8) explodir(&t, x + 1, y + 1);
 
             int linhas = remover_linhas_completas(&t);
-            atualizar_pontuacao(&pontuacao, linhas);
+            atualizar_pontuacao(&pontuacao, linhas, (tipo == 8));
 
             tipo = rand() % 9;
             rot = 0;

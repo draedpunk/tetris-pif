@@ -29,7 +29,7 @@ void desenhar_mapa_com_peca(MAPA* t, int tetramino_atual, int rotacao_atual, int
 int remover_linhas_completas(MAPA *t);
 void inicializar_mapa(MAPA *t);
 void posicionar_tetramino_no_mapa(MAPA *t, int tipo, int rot, int x, int y);
-void atualizar_pontuacao(int *pontuacao, int linhas);
+void atualizar_pontuacao(int *pontuacao, int linhas, int eh_explosiva);
 void processar_input(int *teclas, int *x, int *y, int *rot, int *bRotateHold, MAPA *t, int tipo);
 int verificar_game_over(MAPA *t, int tipo, int rot, int x, int y);
 
