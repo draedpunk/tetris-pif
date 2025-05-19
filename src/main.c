@@ -14,9 +14,20 @@
 #define INICIO_Y 4
 
 char *tetraminos[9];
-unsigned char *grade_jogo = NULL;
 
-void ler_mapa(MAPA *m) {
+void alocar_mapa(MAPA* t) {
+    t->matriz = malloc(t->linhas * sizeof(char*));
+
+    for (int i = 0; i < t->linhas; i++) {
+        t->matriz[i] = malloc((t->colunas + 1) * sizeof(char)); // +1 pro '\0'
+        for (int j = 0; j < t->colunas + 1; j++) {
+            t->matriz[i][j] = 0;
+        }
+    }
+}
+
+
+void ler_mapa(MAPA *t) {
     FILE *f = fopen("mapa.txt", "r");
     if (f == NULL) {
         printf("Erro ao abrir o mapa.\n");
@@ -27,13 +38,16 @@ void ler_mapa(MAPA *m) {
     int linhas = 0;
     int colunas = -1;
 
+    // Primeiro passo: ler e contar linhas/colunas
+    char temp[TAMANHO_MAX_LINHAS][TAMANHO_MAX_COLUNAS];
+
     while (fgets(linha, sizeof(linha), f) != NULL) {
-        linha[strcspn(linha, "\r\n")] = 0;
+        linha[strcspn(linha, "\r\n")] = 0; // remove quebra de linha
         int len = strlen(linha);
 
         if (colunas == -1) colunas = len;
         if (len != colunas) {
-            printf("Erro: mapa com colunas irregulares (linha %d).\n", linhas + 2);
+            printf("Erro: mapa com colunas irregulares (linha %d).\n", linhas + 1);
             fclose(f);
             exit(1);
         }
@@ -44,27 +58,37 @@ void ler_mapa(MAPA *m) {
             exit(1);
         }
 
-        strcpy(m->matriz[linhas], linha);
+        strcpy(temp[linhas], linha);
         linhas++;
     }
 
     fclose(f);
 
-    m->linhas = linhas;
-    m->colunas = colunas;
+    // Agora já sabemos as dimensões
+    t->linhas = linhas;
+    t->colunas = colunas;
+    alocar_mapa(t);  // aloca corretamente com base nas dimensões
+
+    // Copia os dados lidos para a matriz alocada
+    for (int i = 0; i < linhas; i++) {
+        strcpy(t->matriz[i], temp[i]);
+    }
+    printf("Debug - First line of map: %s\n", t->matriz[0]);
+
 }
+
 void imprimir_mapa(MAPA* t) {
     for (int i = 0; i < t->linhas; i++) {
         screenGotoxy(INICIO_X, INICIO_Y + i);
-        printf("%s", t->matriz[i]);
+        for (int j = 0; j < t->colunas; j++) {
+            printf("%c", t->matriz[i][j]);
+        }
     }
 }
-
 
 //peças do tetris: I, O, T, S, L
 // peças espelhadas: S-> Z, L -> J
 // peça explosiva 
-
 void carregar_tetraminos() {
     tetraminos[0] = "...."
                     "XXXX"
@@ -159,17 +183,18 @@ void ler_input(int tecla[4]) {
     }
 }
 
-void explodir(int cx, int cy) {
+void explodir(MAPA* t, int cx, int cy) {
     for (int y = -1; y <= 1; y++) {
         for (int x = -1; x <= 1; x++) {
             int px = cx + x;
             int py = cy + y;
             if (px >= 0 && px < LARGURA_JOGO && py >= 0 && py < ALTURA_JOGO) {
-                grade_jogo[py * LARGURA_JOGO + px] = 0;
+                t->matriz[py][px] = ' ';
             }
         }
     }
 }
+
 
 void desenhar_mapa_com_peca(MAPA* t, int tetramino_atual, int rotacao_atual, int x_atual, int y_atual) {
     // Desenha o mapa linha a linha
@@ -177,10 +202,8 @@ void desenhar_mapa_com_peca(MAPA* t, int tetramino_atual, int rotacao_atual, int
         for (int x = 0; x < t->colunas; x++) {
             screenGotoxy(INICIO_X + x, INICIO_Y + y);
 
-            // Verifica se a peça atual ocupa essa posição
             int caractere_peca = 0; // 0 significa não tem peça aqui
 
-            // Verifica se o ponto (x, y) está dentro da área da peça (4x4)
             int rel_x = x - x_atual;
             int rel_y = y - y_atual;
             if (rel_x >= 0 && rel_x < 4 && rel_y >= 0 && rel_y < 4) {
@@ -194,8 +217,6 @@ void desenhar_mapa_com_peca(MAPA* t, int tetramino_atual, int rotacao_atual, int
                 // Desenha o caractere da peça (exemplo: 'A' + tetramino_atual)
                 printf("%c", 'A' + tetramino_atual);
             } else {
-                // Desenha o caractere do mapa
-                // Se for espaço, desenha espaço mesmo
                 printf("%c", t->matriz[y][x]);
             }
         }
@@ -203,154 +224,143 @@ void desenhar_mapa_com_peca(MAPA* t, int tetramino_atual, int rotacao_atual, int
     }
 }
 
+int remover_linhas_completas(MAPA *t) {
+    int linhas_removidas = 0;
+
+    for (int y = t->linhas - 2; y >= 0; y--) { // -1 ignora base
+        int cheia = 1;
+        for (int x = 1; x < t->colunas - 1; x++) {
+            if (t->matriz[y][x] == ' ') {
+                cheia = 0;
+                break;
+            }
+        }
+
+        if (cheia) {
+            // Desce todas as linhas acima
+            for (int yy = y; yy > 0; yy--) {
+                for (int x = 1; x < t->colunas - 1; x++) {
+                    t->matriz[yy][x] = t->matriz[yy - 1][x];
+                }
+            }
+
+            // Limpa a linha do topo
+            for (int x = 1; x < t->colunas - 1; x++) {
+                t->matriz[0][x] = ' ';
+            }
+
+            linhas_removidas++;
+            y++; // Reavaliar linha atual após o shift
+        }
+    }
+
+    return linhas_removidas;
+}
+
+void inicializar_mapa(MAPA *t) {
+    for (int y = 0; y < t->linhas; y++) {
+        for (int x = 0; x < t->colunas; x++) {
+            t->matriz[y][x] = ' ';
+        }
+    }
+}
+
+void posicionar_tetramino_no_mapa(MAPA *t, int tipo, int rot, int x, int y) {
+    for (int py = 0; py < 4; py++) {
+        for (int px = 0; px < 4; px++) {
+            int pi = rotacionar(px, py, rot);
+            if (tetraminos[tipo][pi] != '.') {
+                int mx = x + px;
+                int my = y + py;
+
+                if (mx >= 0 && mx < t->colunas && my >= 0 && my < t->linhas) {
+                    t->matriz[my][mx] = '#';
+                }
+            }
+        }
+    }
+}
+
+void atualizar_pontuacao(int *pontuacao, int linhas) {
+    *pontuacao += 25;
+    if (linhas > 0) {
+        *pontuacao += (1 << linhas) * 100;
+    }
+}
+
+void processar_input(int *teclas, int *x, int *y, int *rot, int *bRotateHold, MAPA *t, int tipo) {
+    if (teclas[0] && pode_encaixar(t, tipo, *rot, *x + 1, *y)) (*x)++;
+    if (teclas[1] && pode_encaixar(t, tipo, *rot, *x - 1, *y)) (*x)--;
+    if (teclas[2] && pode_encaixar(t, tipo, *rot, *x, *y + 1)) {
+        (*y)++;
+        timerUpdateTimer(500);
+    }
+    if (teclas[3]) {
+        if (*bRotateHold && pode_encaixar(t, tipo, *rot + 1, *x, *y))
+            (*rot)++;
+        *bRotateHold = 0;
+    } else {
+        *bRotateHold = 1;
+    }
+}
+
+int verificar_game_over(MAPA *t, int tipo, int rot, int x, int y) {
+    return !pode_encaixar(t, tipo, rot, x, y);
+}
+
 int main() {
     MAPA t;
-    ler_mapa(&t);  // t é a variável do tipo MAPA que será usada em todo o programa
-
+    ler_mapa(&t); 
+    //inicializar_mapa(&t);
     srand(time(NULL));
-    grade_jogo = (unsigned char *) calloc(t.linhas * t.colunas, sizeof(unsigned char));
-    if (!grade_jogo) {
-        printf("Erro na alocação de memória!\n");
-        return 1;
-    }
-
     carregar_tetraminos();
 
-    // Inicializa grade_jogo com 0
-    for (int y = 0; y < t.linhas; y++) {
-        for (int x = 0; x < t.colunas; x++) {
-            grade_jogo[y * t.colunas + x] = 0;
-        }
-    }
-
     screenInit(1);
+    timerInit(500);
 
-    int tetramino_atual = rand() % 9;
-    int rotacao_atual = 0;
-    int x_atual = LARGURA_JOGO / 2 - 2;
-    int y_atual = 0;
+    int pontuacao = 0, fim_jogo = 0, velocidade = 500;
+    int teclas[4] = {0}, bRotateHold = 1;
 
-    int velocidade = 500;
-    int cair = 0;
-    int tetraminos_jogados = 0;
-    int pontuacao = 0;
-    int fim_jogo = 0;
-    int vetor_linhas[4];
-    int total_linhas = 0;
-    int bRotateHold = 1;
-    int teclas[4] = {0, 0, 0, 0};
-
-    timerInit(velocidade);
+    int tipo = rand() % 9, rot = 0;
+    int x = LARGURA_JOGO / 2 - 2, y = 0;
 
     while (!fim_jogo) {
-        cair = timerTimeOver();
+        int cair = timerTimeOver();
         ler_input(teclas);
+        processar_input(teclas, &x, &y, &rot, &bRotateHold, &t, tipo);
 
-        if (teclas[0] && pode_encaixar(&t, tetramino_atual, rotacao_atual, x_atual + 1, y_atual)) x_atual++;
-        if (teclas[1] && pode_encaixar(&t, tetramino_atual, rotacao_atual, x_atual - 1, y_atual)) x_atual--;
-        if (teclas[2] && pode_encaixar(&t, tetramino_atual, rotacao_atual, x_atual, y_atual + 1)) {
-            y_atual++;
+        if (cair && pode_encaixar(&t, tipo, rot, x, y + 1)) {
+            y++;
             timerUpdateTimer(velocidade);
-        }
-        if (teclas[3]) {
-            if (bRotateHold && pode_encaixar(&t, tetramino_atual, rotacao_atual + 1, x_atual, y_atual))
-                rotacao_atual++;
-            bRotateHold = 0;
-        } else {
-            bRotateHold = 1;
-        }
+        } else if (!pode_encaixar(&t, tipo, rot, x, y + 1)) {
+            posicionar_tetramino_no_mapa(&t, tipo, rot, x, y);
 
-        int pode_descer = pode_encaixar(&t, tetramino_atual, rotacao_atual, x_atual, y_atual + 1);
+            if (tipo == 8) explodir(&t, x + 1, y + 1);
 
-        if (cair && pode_descer) {
-            y_atual++;
-            timerUpdateTimer(velocidade);
-        } else if (!pode_descer) {
-            tetraminos_jogados++;
+            int linhas = remover_linhas_completas(&t);
+            atualizar_pontuacao(&pontuacao, linhas);
 
-            if (tetraminos_jogados % 50 == 0 && velocidade >= 100) {
-                velocidade -= 50;
-                timerUpdateTimer(velocidade);
-            }
+            tipo = rand() % 9;
+            rot = 0;
+            x = LARGURA_JOGO / 2 - 2;
+            y = 0;
 
-            for (int py = 0; py < 4; py++) {
-                for (int px = 0; px < 4; px++) {
-                    int pi = rotacionar(px, py, rotacao_atual);
-                    if (tetraminos[tetramino_atual][pi] != '.') {
-                        int mx = x_atual + px;
-                        int my = y_atual + py;
-                        if (mx >= 0 && mx < t.colunas && my >= 0 && my < t.linhas) {
-                            t.matriz[my][mx] = 'A' + tetramino_atual;
-                        }
-                    }
-                }
-            }
-
-            if (tetramino_atual == 8) {
-                explodir(x_atual + 1, y_atual + 1);
-            }
-
-            total_linhas = 0;
-            for (int py = 0; py < 4; py++) {
-                int linha = y_atual + py;
-                if (linha < t.linhas - 1) {
-                    int cheia = 1;
-                    for (int px = 1; px < t.colunas - 1; px++) {
-                        if (grade_jogo[linha * t.colunas + px] == 0) {
-                            cheia = 0;
-                            break;
-                        }
-                    }
-                    if (cheia) {
-                        for (int px = 1; px < t.colunas - 1; px++) {
-                            grade_jogo[linha * t.colunas + px] = 8;
-                        }
-                        if (total_linhas < 4) {
-                            vetor_linhas[total_linhas++] = linha;
-                        }
-                    }
-                }
-            }
-
-            if (tetramino_atual != 8) {
-                pontuacao += 25;
-
-                if (total_linhas > 0) {
-                    pontuacao += (1 << total_linhas) * 100;
-
-                    for (int i = 0; i < total_linhas; i++) {
-                        for (int y = vetor_linhas[i]; y > 0; y--) {
-                            for (int x = 1; x < t.colunas - 1; x++) {
-                                grade_jogo[y * t.colunas + x] = grade_jogo[(y - 1) * t.colunas + x];
-                            }
-                        }
-                    }
-                    total_linhas = 0;
-                }
-            }
-
-            tetramino_atual = rand() % 9;
-            rotacao_atual = 0;
-            x_atual = LARGURA_JOGO / 2 - 2;
-            y_atual = 0;
-
-            if (!pode_encaixar(&t, tetramino_atual, rotacao_atual, x_atual, y_atual)) {
+            if (verificar_game_over(&t, tipo, rot, x, y)) {
                 fim_jogo = 1;
                 screenGotoxy(INICIO_X, INICIO_Y + t.linhas / 2);
                 printf("GAME OVER!");
             }
         }
 
-        desenhar_mapa_com_peca(&t, tetramino_atual, rotacao_atual, x_atual, y_atual);
-
+        desenhar_mapa_com_peca(&t, tipo, rot, x, y);
         screenGotoxy(INICIO_X, INICIO_Y + t.linhas + 1);
         printf("Pontuacao: %d", pontuacao);
-
         screenUpdate();
         usleep(50000);
     }
 
     screenDestroy();
-    free(grade_jogo);
+    for (int i = 0; i < t.linhas; i++) free(t.matriz[i]);
+    free(t.matriz);
     return 0;
 }
