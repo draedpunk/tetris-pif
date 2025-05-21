@@ -7,5 +7,4 @@ void exibir_banner_titulo();
 void exibir_banner_gameover();
 
 
-
 #endif

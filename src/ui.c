@@ -6,6 +6,7 @@
 #include "screen.h"
 #include "timer.h"
 #include "keyboard.h"
+
 #include "tetris.h"
 #include "ui.h"
 
@@ -46,21 +47,19 @@ void banner_gameover() {
 }
 
 void exibir_banner_titulo() {
-    screenClear();
+    screenInit(1);
     banner_titulo();
     screenUpdate();
-    sleep(2);
+    sleep(5);
     screenClear();
-    screenUpdate();
 }
 
 void exibir_banner_gameover() {
-    screenClear();
+    screenInit(1);
     banner_gameover();
     screenUpdate();
-    sleep(2);
+    sleep(5);
     screenClear();
-    screenUpdate();
 }
 
 
