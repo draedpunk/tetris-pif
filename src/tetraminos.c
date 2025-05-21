@@ -22,7 +22,7 @@ void carregar_tetraminos() {
     tetraminos[1] = "..X."
                     "..X."
                     ".XX."
-                    "...."; // J pra simular o L espelhado
+                    "...."; // Jpra simular o L espelhado
 
     tetraminos[2] = ".X.."
                     ".X.."

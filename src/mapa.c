@@ -22,7 +22,7 @@ void alocar_mapa(MAPA* t) {
 }
 
 void ler_mapa(MAPA *t) {
-    FILE *f = fopen("mapa.txt", "r");
+    FILE *f = fopen("./assets/ascii-arts/mapa.txt", "r");
     if (f == NULL) {
         printf("Erro ao abrir o mapa.\n");
         exit(1);
@@ -64,7 +64,7 @@ void ler_mapa(MAPA *t) {
     for (int i = 0; i < linhas; i++) {
         strcpy(t->matriz[i], temp[i]);
     }
-    printf("Debug - First line of map: %s\n", t->matriz[0]);
+    //printf("Debug - First line of map: %s\n", t->matriz[0]);
 
 }
 

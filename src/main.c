@@ -9,10 +9,9 @@
 
 #include "tetris.h"
 #include "ui.h"
-
-
 #include "tetraminos.h"
 #include "mapa.h"
+#include "pontuacao.h"
 
 void ler_input(int tecla[4]) {
     for (int i = 0; i < 4; i++) tecla[i] = 0;
@@ -25,18 +24,6 @@ void ler_input(int tecla[4]) {
             case 's': case 'S': tecla[2] = 1; break; // baixo
             case 'w': case 'W': tecla[3] = 1; break; // rotacionar
         }
-    }
-}
-
-void atualizar_pontuacao(int *pontuacao, int linhas, int eh_explosiva) {
-    if (eh_explosiva) {
-        *pontuacao -= 50; //vai perder 50 pontos com a peça explsoiva
-        return;
-    }
-    
-    *pontuacao += 25;
-    if (linhas > 0) {
-        *pontuacao += (1 << linhas) * 100;
     }
 }
 

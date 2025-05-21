@@ -50,7 +50,7 @@ void exibir_banner_titulo() {
     screenInit(1);
     banner_titulo();
     screenUpdate();
-    sleep(5);
+    sleep(3);
     screenClear();
 }
 
@@ -58,7 +58,7 @@ void exibir_banner_gameover() {
     screenInit(1);
     banner_gameover();
     screenUpdate();
-    sleep(5);
+    sleep(3);
     screenClear();
 }
 
