@@ -14,16 +14,16 @@
 // ranking vai mostrar no max as 5 maiores pontuacoes
 
 void atualizar_pontuacao(int *pontuacao, int linhas, int eh_explosiva) {
-    if (eh_explosiva) {
-        *pontuacao -= 50; //vai perder 50 pontos com a peça explsoiva
-        return;
+    if (eh_explosiva){
+        *pontuacao -= 50;  
+        return; 
     }
-    
     *pontuacao += 25;
     if (linhas > 0) {
-        *pontuacao += (1 << linhas) * 100;
+        *pontuacao += linhas * 75; 
     }
 }
+
 
 void receber_dados_pontuacao(Jogador pontos[], int *qtd_dados){
     FILE *arquivo_pontos = fopen("./assets/ascii-arts", "r");
