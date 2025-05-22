@@ -17,5 +17,6 @@ void atualizar_pontuacao(int *pontuacao, int linhas, int eh_explosiva);
 void receber_dados_pontuacao(Jogador pontos[], int *qtd_dados);
 void colocar_ordem_cresc(Jogador pontos[], int qtd_dados);
 void exibir_ranking();
+void exibir_pontuacao(int *pontuacao);
 
 #endif

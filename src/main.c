@@ -59,9 +59,14 @@ int main() {
 
     int pontuacao = 0, fim_jogo = 0, velocidade = 500;
     int teclas[4] = {0}, bRotateHold = 1;
-
     int tipo = rand() % 9, rot = 0;
     int x = LARGURA_JOGO / 2 - 2, y = 0;
+    int acumulador_linhas =0;
+
+    exibir_pontuacao(&pontuacao);
+    exibir_linhas_removidas(acumulador_linhas);
+    exibir_prox_peca(tipo);
+
 
     while (!fim_jogo) {
 
@@ -80,11 +85,11 @@ int main() {
             }
 
             int linhas = remover_linhas_completas(&t);
-            int acumulador_linhas =0;
             acumulador_linhas += linhas;
             exibir_linhas_removidas(acumulador_linhas);
             
             atualizar_pontuacao(&pontuacao, linhas, (tipo == 8));
+            exibir_pontuacao(&pontuacao);
 
             tipo = rand() % 9;
             rot = 0;
@@ -100,8 +105,8 @@ int main() {
 
         desenhar_mapa_com_peca(&t, tipo, rot, x, y);
 
-        screenGotoxy(INICIO_X, INICIO_Y + t.linhas + 1);
-        printf("Pontuacao: %d", pontuacao);
+        // screenGotoxy(INICIO_X, INICIO_Y + t.linhas + 1);
+        // printf("Pontuacao: %d", pontuacao);
 
         exibir_prox_peca(tipo);
         screenUpdate();

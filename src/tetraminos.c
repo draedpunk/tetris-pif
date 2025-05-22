@@ -175,14 +175,14 @@ void exibir_prox_peca(int proxima_peca) {
 void exibir_linhas_removidas(int total_linhas_remov) {
     screenGotoxy(INICIO_X + LARGURA_JOGO + 9, INICIO_Y + 9);
     printf("+---Linhas---+");
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 1; i++) {
         screenGotoxy(INICIO_X + LARGURA_JOGO + 9, INICIO_Y + 10 + i);
         printf("|            |");
     }
-    screenGotoxy(INICIO_X + LARGURA_JOGO + 9, INICIO_Y + 15);
+    screenGotoxy(INICIO_X + LARGURA_JOGO + 9, INICIO_Y + 11);
     printf("+------------+");
 
-    screenGotoxy(INICIO_X + LARGURA_JOGO + 18, INICIO_Y + 11);
+    screenGotoxy(INICIO_X + LARGURA_JOGO + 12, INICIO_Y + 10);
     printf("%4d", total_linhas_remov);
 }
 

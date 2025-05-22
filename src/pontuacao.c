@@ -48,7 +48,7 @@ void colocar_ordem_cresc(Jogador pontos[], int qtd_dados){
     Jogador valor_temporario;
 
     for (int i =0; i < qtd_dados-1; i++){
-        for (int j=i +1; j <qtd_dados; j++){
+        for (int j= i +1; j <qtd_dados; j++){
 
             if(pontos[i].pontuacao < pontos[j].pontuacao){
                 valor_temporario = pontos[i];
@@ -66,7 +66,6 @@ void exibir_ranking(){
     receber_dados_pontuacao(pontos, &cont_jogadores);
     screenClear();
 
-    //screenDrawBorders();
     screenGotoxy(SCRSTARTX + 35, SCRSTARTY + 5);
     printf("RANKING\n");
 
@@ -96,5 +95,20 @@ void exibir_ranking(){
     printf("Pressione qualquer tecla para voltar ao menu principal.\n");
     readch();
 
+}
+
+void exibir_pontuacao(int *pontuacao){
+    screenGotoxy(INICIO_X + LARGURA_JOGO+ 9, INICIO_Y +12);
+    printf("+---Pontos---+");
+
+    for(int i =0; i<1; i++){
+        screenGotoxy(INICIO_X + LARGURA_JOGO + 9, INICIO_Y +13);
+        printf("|            |");
+    }
+    screenGotoxy(INICIO_X + LARGURA_JOGO + 9, INICIO_Y + 14);
+    printf("+------------+");
+
+    screenGotoxy(INICIO_X+LARGURA_JOGO + , INICIO_Y + 13);
+    printf("%4d", *pontuacao);
 }
 
