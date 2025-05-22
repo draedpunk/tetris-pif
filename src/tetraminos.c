@@ -98,7 +98,10 @@ void explodir(MAPA* t, int cx, int cy) {
             int px = cx + x;
             int py = cy + y;
             if (px >= 0 && px < LARGURA_JOGO && py >= 0 && py < ALTURA_JOGO) {
-                t->matriz[py][px] = ' ';
+                char alvo = t->matriz[py][px];
+                if (alvo != '|' && alvo != '-') {
+                    t->matriz[py][px] = ' ';
+                }
             }
         }
     }
@@ -149,4 +152,39 @@ int remover_linhas_completas(MAPA *t) {
 
     return linhas_removidas;
 }
+
+void exibir_prox_peca(int proxima_peca) {
+    screenGotoxy(INICIO_X + LARGURA_JOGO + 9, INICIO_Y + 1);
+    printf("+---Proxima--+");
+
+    for (int y = 0; y < 4; y++) {
+        screenGotoxy(INICIO_X + LARGURA_JOGO + 9, INICIO_Y + 2 + y);
+        printf("|    ");  // esquerda
+
+        for (int x = 0; x < 4; x++) {
+            char bloco = tetraminos[proxima_peca][rotacionar(x, y, 0)];
+            printf("%c", bloco != '.' ? bloco : ' ');
+        }
+
+        printf("    |");  //direita
+    }
+    screenGotoxy(INICIO_X + LARGURA_JOGO + 9, INICIO_Y + 6);
+    printf("+------------+");
+}
+
+void exibir_linhas_removidas(int total_linhas_remov) {
+    screenGotoxy(INICIO_X + LARGURA_JOGO + 9, INICIO_Y + 9);
+    printf("+---Linhas---+");
+    for (int i = 0; i < 3; i++) {
+        screenGotoxy(INICIO_X + LARGURA_JOGO + 9, INICIO_Y + 10 + i);
+        printf("|            |");
+    }
+    screenGotoxy(INICIO_X + LARGURA_JOGO + 9, INICIO_Y + 15);
+    printf("+------------+");
+
+    screenGotoxy(INICIO_X + LARGURA_JOGO + 18, INICIO_Y + 11);
+    printf("%4d", total_linhas_remov);
+}
+
+
 

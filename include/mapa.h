@@ -12,7 +12,8 @@ typedef struct {
 
 #define TAMANHO_MAX_LINHAS 24
 #define TAMANHO_MAX_COLUNAS 40
-#define INICIO_X 6
+
+#define INICIO_X 20
 #define INICIO_Y 4
 #define LARGURA_JOGO 9
 #define ALTURA_JOGO 18

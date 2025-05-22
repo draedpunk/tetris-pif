@@ -80,6 +80,10 @@ int main() {
             }
 
             int linhas = remover_linhas_completas(&t);
+            int acumulador_linhas =0;
+            acumulador_linhas += linhas;
+            exibir_linhas_removidas(acumulador_linhas);
+            
             atualizar_pontuacao(&pontuacao, linhas, (tipo == 8));
 
             tipo = rand() % 9;
@@ -95,8 +99,11 @@ int main() {
         }
 
         desenhar_mapa_com_peca(&t, tipo, rot, x, y);
+
         screenGotoxy(INICIO_X, INICIO_Y + t.linhas + 1);
         printf("Pontuacao: %d", pontuacao);
+
+        exibir_prox_peca(tipo);
         screenUpdate();
         usleep(50000);
     }

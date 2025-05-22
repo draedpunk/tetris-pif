@@ -64,17 +64,18 @@ void ler_mapa(MAPA *t) {
     for (int i = 0; i < linhas; i++) {
         strcpy(t->matriz[i], temp[i]);
     }
-    //printf("Debug - First line of map: %s\n", t->matriz[0]);
 
 }
 
 void imprimir_mapa(MAPA* t) {
     for (int i = 0; i < t->linhas; i++) {
+
         screenGotoxy(INICIO_X, INICIO_Y + i);
+
         for (int j = 0; j < t->colunas; j++) {
             printf("%c", t->matriz[i][j]);
         }
-    }
+    } 
 }
 
 void desenhar_mapa_com_peca(MAPA* t, int tetramino_atual, int rotacao_atual, int x_atual, int y_atual) {
